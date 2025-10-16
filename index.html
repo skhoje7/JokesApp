@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Joke Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Main container for the chat application -->
+  <div class="chat-container">
+    <header class="chat-header">
+      <h1>AI Joke Chat</h1>
+    </header>
+
+    <!-- Area where chat messages will appear -->
+    <main id="chat" class="chat-window"></main>
+
+    <!-- Input area for the user to type their joke topic -->
+    <form id="chat-form" class="chat-input" autocomplete="off">
+      <input
+        type="text"
+        id="user-input"
+        name="topic"
+        placeholder="Type a joke topic (e.g. animals)"
+        required
+      />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
