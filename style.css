@@ -69,6 +69,37 @@ body {
   border-bottom-left-radius: 4px;
 }
 
+/* Typing indicator styling */
+.message.typing {
+  font-style: italic;
+  opacity: 0.7;
+  position: relative;
+}
+
+.message.typing::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  bottom: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: 12px 0 0 rgba(0, 0, 0, 0.2), 24px 0 0 rgba(0, 0, 0, 0.2);
+  animation: typing-bounce 1.2s infinite ease-in-out;
+}
+
+@keyframes typing-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-3px);
+  }
+}
+
 /* Input area styling */
 .chat-input {
   display: flex;
