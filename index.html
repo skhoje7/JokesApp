@@ -19,6 +19,32 @@
       </div>
     </header>
 
+    <section id="agent-settings" class="agent-settings" hidden>
+      <div class="field-group">
+        <label for="agent-id">Agent ID</label>
+        <input
+          type="text"
+          id="agent-id"
+          name="agentId"
+          placeholder="agt-..."
+          autocomplete="off"
+        />
+      </div>
+      <div class="field-group">
+        <label for="session-id">Session ID <span class="hint">(optional)</span></label>
+        <input
+          type="text"
+          id="session-id"
+          name="sessionId"
+          placeholder="Reuse to keep conversation memory"
+          autocomplete="off"
+        />
+      </div>
+      <p class="settings-note">
+        Provide your Agent ID from the OpenAI Agent Builder. Reuse a session ID to let ComedianBot remember previous topics.
+      </p>
+    </section>
+
     <!-- Area where chat messages will appear -->
     <main id="chat" class="chat-window"></main>
 

@@ -87,6 +87,53 @@ body {
   background: #fdfdff;
 }
 
+/* Agent Builder configuration panel */
+.agent-settings {
+  padding: 18px 20px 10px;
+  background: #fff7fb;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: grid;
+  gap: 12px;
+}
+
+.agent-settings .field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.agent-settings label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #5a5a5a;
+}
+
+.agent-settings .hint {
+  font-weight: 400;
+  color: #8a8a8a;
+}
+
+.agent-settings input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 0.95rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.agent-settings input:focus {
+  border-color: #ff9a9e;
+  box-shadow: 0 0 0 3px rgba(255, 154, 158, 0.25);
+  outline: none;
+}
+
+.settings-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #7a7a7a;
+  line-height: 1.4;
+}
+
 /* Base styles for chat bubbles */
 .message {
   padding: 12px 16px;

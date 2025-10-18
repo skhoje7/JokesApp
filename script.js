@@ -4,9 +4,15 @@ const chatForm = document.getElementById('chat-form');
 const userInput = document.getElementById('user-input');
 const modeLabel = document.getElementById('mode-label');
 const modeToggleButton = document.getElementById('mode-toggle');
+const agentSettings = document.getElementById('agent-settings');
+const agentIdInput = document.getElementById('agent-id');
+const sessionIdInput = document.getElementById('session-id');
 
 // Track which backend the user wants to use; default to the existing ChatKit flow.
 let activeMode = 'chatkit';
+if (agentSettings) {
+  agentSettings.hidden = true;
+}
 
 // Toggle between ChatKit (responses endpoint) and AgentKit (agent endpoint) modes.
 modeToggleButton.addEventListener('click', () => {
@@ -16,6 +22,9 @@ modeToggleButton.addEventListener('click', () => {
   modeLabel.textContent = isAgentMode ? 'AgentKit Mode' : 'ChatKit Mode';
   modeToggleButton.textContent = isAgentMode ? 'Switch to ChatKit' : 'Switch to AgentKit';
   modeToggleButton.setAttribute('aria-pressed', String(isAgentMode));
+  if (agentSettings) {
+    agentSettings.hidden = !isAgentMode;
+  }
 });
 
 /**
@@ -51,12 +60,24 @@ function showTypingIndicator(text) {
 async function fetchJoke(topic, mode) {
   try {
     const endpoint = mode === 'agentkit' ? '/api/agentJoke' : '/api/joke';
+    const payload = { topic };
+
+    if (mode === 'agentkit') {
+      // Include the Agent Builder identifiers so the backend can route the
+      // request to the hosted agent and optionally reuse session memory.
+      payload.agentId = agentIdInput ? agentIdInput.value.trim() : '';
+      const session = sessionIdInput ? sessionIdInput.value.trim() : '';
+      if (session) {
+        payload.sessionId = session;
+      }
+    }
+
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ topic })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
@@ -84,6 +105,14 @@ chatForm.addEventListener('submit', async event => {
     return;
   }
 
+  if (activeMode === 'agentkit' && !(agentIdInput && agentIdInput.value.trim())) {
+    addMessage(
+      'Please enter your Agent ID (from the OpenAI Agent Builder) to use Agent mode.',
+      'bot'
+    );
+    return;
+  }
+
   // Display the user's message
   addMessage(topic, 'user');
 
@@ -95,9 +124,9 @@ chatForm.addEventListener('submit', async event => {
   userInput.value = '';
   userInput.focus();
 
-  // Retrieve the AI-generated joke from the backend
-  // AgentKit maintains conversational context server-side, so repeated
-  // requests in Agent mode build on earlier topics. ChatKit mode stays stateless.
+  // Retrieve the AI-generated joke from the backend. Agent Builder keeps
+  // conversational context server-side for a session, so reusing the same
+  // session ID lets ComedianBot reference previous topics.
   const joke = await fetchJoke(topic, activeMode);
 
   // Replace the typing indicator with the actual joke text
@@ -105,6 +134,6 @@ chatForm.addEventListener('submit', async event => {
   typingIndicator.classList.remove('typing');
 });
 
-// Future extension idea: register new tools with AgentKit (e.g. voice synth or
-// persisting "favorite" jokes in Supabase) and call them from the backend
-// without changing this frontend fetch logic.
+// Future extension idea: enable new tools for the hosted agent (voice synth,
+// Supabase favorites, etc.) directly in the Agent Builder UI and they'll be
+// available without changing this frontend fetch logic.
