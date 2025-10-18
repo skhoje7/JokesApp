@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Joke Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Main container for the chat application -->
+  <div class="chat-container">
+    <header class="chat-header">
+      <h1>AI Joke Chat</h1>
+      <div class="mode-controls" aria-live="polite">
+        <span id="mode-label" class="mode-label">ChatKit Mode</span>
+        <button type="button" id="mode-toggle" class="mode-toggle" aria-pressed="false">
+          Switch to AgentKit
+        </button>
+      </div>
+    </header>
+
+    <section id="agent-settings" class="agent-settings" hidden>
+      <div class="field-group">
+        <label for="agent-id">Agent ID</label>
+        <input
+          type="text"
+          id="agent-id"
+          name="agentId"
+          placeholder="agt-..."
+          autocomplete="off"
+        />
+      </div>
+      <div class="field-group">
+        <label for="session-id">Session ID <span class="hint">(optional)</span></label>
+        <input
+          type="text"
+          id="session-id"
+          name="sessionId"
+          placeholder="Reuse to keep conversation memory"
+          autocomplete="off"
+        />
+      </div>
+      <p class="settings-note">
+        Provide your Agent ID from the OpenAI Agent Builder. Reuse a session ID to let ComedianBot remember previous topics.
+      </p>
+    </section>
+
+    <!-- Area where chat messages will appear -->
+    <main id="chat" class="chat-window"></main>
+
+    <!-- Input area for the user to type their joke topic -->
+    <form id="chat-form" class="chat-input" autocomplete="off">
+      <input
+        type="text"
+        id="user-input"
+        name="topic"
+        placeholder="Type a joke topic (e.g. animals)"
+        required
+      />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
