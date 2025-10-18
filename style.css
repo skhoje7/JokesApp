@@ -1,0 +1,234 @@
+/* Basic page styles to center the chat container */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f8f9fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #333;
+}
+
+/* Container holding the entire chat application */
+.chat-container {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header styling for the app title */
+.chat-header {
+  background: linear-gradient(135deg, #a8edea, #fed6e3);
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chat-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #3a3a3a;
+}
+
+.mode-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 6px 10px;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mode-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a4a4a;
+}
+
+.mode-toggle {
+  border: none;
+  background: #ffffff;
+  color: #ff6781;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mode-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 103, 129, 0.25);
+}
+
+.mode-toggle:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Main chat window where messages appear */
+.chat-window {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fdfdff;
+}
+
+/* Agent Builder configuration panel */
+.agent-settings {
+  padding: 18px 20px 10px;
+  background: #fff7fb;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: grid;
+  gap: 12px;
+}
+
+.agent-settings .field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.agent-settings label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #5a5a5a;
+}
+
+.agent-settings .hint {
+  font-weight: 400;
+  color: #8a8a8a;
+}
+
+.agent-settings input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 0.95rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.agent-settings input:focus {
+  border-color: #ff9a9e;
+  box-shadow: 0 0 0 3px rgba(255, 154, 158, 0.25);
+  outline: none;
+}
+
+.settings-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #7a7a7a;
+  line-height: 1.4;
+}
+
+/* Base styles for chat bubbles */
+.message {
+  padding: 12px 16px;
+  border-radius: 18px;
+  max-width: 80%;
+  line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* User message bubble styling */
+.message.user {
+  align-self: flex-end;
+  background: #cce5ff;
+  border-bottom-right-radius: 4px;
+}
+
+/* Bot message bubble styling */
+.message.bot {
+  align-self: flex-start;
+  background: #ffe5ec;
+  border-bottom-left-radius: 4px;
+}
+
+/* Typing indicator styling */
+.message.typing {
+  font-style: italic;
+  opacity: 0.7;
+  position: relative;
+}
+
+.message.typing::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  bottom: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: 12px 0 0 rgba(0, 0, 0, 0.2), 24px 0 0 rgba(0, 0, 0, 0.2);
+  animation: typing-bounce 1.2s infinite ease-in-out;
+}
+
+@keyframes typing-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Input area styling */
+.chat-input {
+  display: flex;
+  gap: 10px;
+  padding: 16px;
+  background: #ffffff;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  font-size: 1rem;
+  outline: none;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.chat-input input:focus {
+  border-color: #a8edea;
+  box-shadow: 0 0 0 3px rgba(168, 237, 234, 0.4);
+}
+
+.chat-input button {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ff9a9e, #fecfef);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chat-input button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 154, 158, 0.3);
+}
+
+.chat-input button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
