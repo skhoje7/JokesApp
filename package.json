@@ -4,6 +4,7 @@
   "description": "AI Joke Chat web app with OpenAI-powered backend",
   "type": "module",
   "dependencies": {
+    "@openai/agentkit": "file:lib/agentkit",
     "openai": "^4.52.0"
   }
 }

@@ -2,6 +2,21 @@
 const chatWindow = document.getElementById('chat');
 const chatForm = document.getElementById('chat-form');
 const userInput = document.getElementById('user-input');
+const modeLabel = document.getElementById('mode-label');
+const modeToggleButton = document.getElementById('mode-toggle');
+
+// Track which backend the user wants to use; default to the existing ChatKit flow.
+let activeMode = 'chatkit';
+
+// Toggle between ChatKit (responses endpoint) and AgentKit (agent endpoint) modes.
+modeToggleButton.addEventListener('click', () => {
+  activeMode = activeMode === 'chatkit' ? 'agentkit' : 'chatkit';
+
+  const isAgentMode = activeMode === 'agentkit';
+  modeLabel.textContent = isAgentMode ? 'AgentKit Mode' : 'ChatKit Mode';
+  modeToggleButton.textContent = isAgentMode ? 'Switch to ChatKit' : 'Switch to AgentKit';
+  modeToggleButton.setAttribute('aria-pressed', String(isAgentMode));
+});
 
 /**
  * Create and append a chat bubble to the window.
@@ -22,8 +37,8 @@ function addMessage(text, sender) {
  * Display a friendly indicator while the AI composes a reply.
  * @returns {HTMLDivElement} The typing indicator element.
  */
-function showTypingIndicator() {
-  const indicator = addMessage('AI is thinking…', 'bot');
+function showTypingIndicator(text) {
+  const indicator = addMessage(text, 'bot');
   indicator.classList.add('typing');
   return indicator;
 }
@@ -31,10 +46,12 @@ function showTypingIndicator() {
 /**
  * Request a fresh joke from the backend for the provided topic.
  * @param {string} topic
+ * @param {'chatkit' | 'agentkit'} mode
  */
-async function fetchJoke(topic) {
+async function fetchJoke(topic, mode) {
   try {
-    const response = await fetch('/api/joke', {
+    const endpoint = mode === 'agentkit' ? '/api/agentJoke' : '/api/joke';
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -71,16 +88,23 @@ chatForm.addEventListener('submit', async event => {
   addMessage(topic, 'user');
 
   // Show a typing indicator while we wait for the AI to respond
-  const typingIndicator = showTypingIndicator();
+  const indicatorText = activeMode === 'agentkit' ? '🎭 ComedianBot is thinking…' : 'AI is thinking…';
+  const typingIndicator = showTypingIndicator(indicatorText);
 
   // Clear the input for the next message
   userInput.value = '';
   userInput.focus();
 
   // Retrieve the AI-generated joke from the backend
-  const joke = await fetchJoke(topic);
+  // AgentKit maintains conversational context server-side, so repeated
+  // requests in Agent mode build on earlier topics. ChatKit mode stays stateless.
+  const joke = await fetchJoke(topic, activeMode);
 
   // Replace the typing indicator with the actual joke text
   typingIndicator.textContent = joke;
   typingIndicator.classList.remove('typing');
 });
+
+// Future extension idea: register new tools with AgentKit (e.g. voice synth or
+// persisting "favorite" jokes in Supabase) and call them from the backend
+// without changing this frontend fetch logic.

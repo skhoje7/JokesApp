@@ -26,13 +26,54 @@ body {
 .chat-header {
   background: linear-gradient(135deg, #a8edea, #fed6e3);
   padding: 20px;
-  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .chat-header h1 {
   margin: 0;
   font-size: 1.6rem;
   color: #3a3a3a;
+}
+
+.mode-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 6px 10px;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mode-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a4a4a;
+}
+
+.mode-toggle {
+  border: none;
+  background: #ffffff;
+  color: #ff6781;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mode-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 103, 129, 0.25);
+}
+
+.mode-toggle:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 /* Main chat window where messages appear */
