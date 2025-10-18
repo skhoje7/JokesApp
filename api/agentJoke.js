@@ -36,6 +36,12 @@ export default async function handler(req, res) {
     const rawBody = await readRequestBody(req);
     const body = rawBody ? JSON.parse(rawBody) : {};
     const topic = typeof body.topic === "string" ? body.topic.trim() : "";
+    const message =
+      typeof body.message === "string" && body.message.trim()
+        ? body.message.trim()
+        : topic
+        ? `Tell a short, family-friendly joke about ${topic}.`
+        : "";
     const agentId =
       typeof body.agentId === "string" && body.agentId.trim()
         ? body.agentId.trim()
@@ -46,10 +52,14 @@ export default async function handler(req, res) {
       typeof body.sessionId === "string" && body.sessionId.trim()
         ? body.sessionId.trim()
         : undefined;
+    const workflowId =
+      typeof body.workflowId === "string" && body.workflowId.trim()
+        ? body.workflowId.trim()
+        : undefined;
 
-    if (!topic) {
+    if (!message) {
       res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Topic is required." }));
+      res.end(JSON.stringify({ error: "A message is required." }));
       return;
     }
 
@@ -75,12 +85,16 @@ export default async function handler(req, res) {
           content: [
             {
               type: "input_text",
-              text: `Tell a short, family-friendly joke about ${topic}.`
+              text: message
             }
           ]
         }
       ],
-      ...(sessionId ? { session_id: sessionId } : {})
+      // Reusing a session ID lets Agent Builder stitch conversations together
+      // and remember prior topics. Workflow IDs come from Agent SDK snippets
+      // and are useful when you want trace metadata for observability.
+      ...(sessionId ? { session_id: sessionId } : {}),
+      ...(workflowId ? { metadata: { workflow_id: workflowId } } : {})
     });
 
     let joke = "";

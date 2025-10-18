@@ -7,6 +7,7 @@ const modeToggleButton = document.getElementById('mode-toggle');
 const agentSettings = document.getElementById('agent-settings');
 const agentIdInput = document.getElementById('agent-id');
 const sessionIdInput = document.getElementById('session-id');
+const workflowIdInput = document.getElementById('workflow-id');
 
 // Track which backend the user wants to use; default to the existing ChatKit flow.
 let activeMode = 'chatkit';
@@ -53,14 +54,17 @@ function showTypingIndicator(text) {
 }
 
 /**
- * Request a fresh joke from the backend for the provided topic.
- * @param {string} topic
+ * Request a fresh joke from the backend for the provided user message.
+ * @param {string} message
  * @param {'chatkit' | 'agentkit'} mode
  */
-async function fetchJoke(topic, mode) {
+async function fetchJoke(message, mode) {
   try {
     const endpoint = mode === 'agentkit' ? '/api/agentJoke' : '/api/joke';
-    const payload = { topic };
+    const payload =
+      mode === 'agentkit'
+        ? { message }
+        : { topic: message };
 
     if (mode === 'agentkit') {
       // Include the Agent Builder identifiers so the backend can route the
@@ -69,6 +73,12 @@ async function fetchJoke(topic, mode) {
       const session = sessionIdInput ? sessionIdInput.value.trim() : '';
       if (session) {
         payload.sessionId = session;
+      }
+      // Workflow IDs show up in the Agent SDK snippet the builder exports and
+      // help correlate requests with traces when observability is enabled.
+      const workflow = workflowIdInput ? workflowIdInput.value.trim() : '';
+      if (workflow) {
+        payload.workflowId = workflow;
       }
     }
 
@@ -100,8 +110,8 @@ async function fetchJoke(topic, mode) {
 chatForm.addEventListener('submit', async event => {
   event.preventDefault();
 
-  const topic = userInput.value.trim();
-  if (!topic) {
+  const message = userInput.value.trim();
+  if (!message) {
     return;
   }
 
@@ -114,7 +124,7 @@ chatForm.addEventListener('submit', async event => {
   }
 
   // Display the user's message
-  addMessage(topic, 'user');
+  addMessage(message, 'user');
 
   // Show a typing indicator while we wait for the AI to respond
   const indicatorText = activeMode === 'agentkit' ? '🎭 ComedianBot is thinking…' : 'AI is thinking…';
@@ -127,7 +137,7 @@ chatForm.addEventListener('submit', async event => {
   // Retrieve the AI-generated joke from the backend. Agent Builder keeps
   // conversational context server-side for a session, so reusing the same
   // session ID lets ComedianBot reference previous topics.
-  const joke = await fetchJoke(topic, activeMode);
+  const joke = await fetchJoke(message, activeMode);
 
   // Replace the typing indicator with the actual joke text
   typingIndicator.textContent = joke;
