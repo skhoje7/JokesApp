@@ -1,6 +1,5 @@
 const chatkitRoot = document.getElementById('chatkit-root');
 const chatkitForm = document.getElementById('chatkit-form');
-const apiKeyInput = document.getElementById('api-key');
 const modelInput = document.getElementById('chat-model');
 const instructionsInput = document.getElementById('instructions');
 const sessionNameInput = document.getElementById('session-name');
@@ -8,6 +7,7 @@ const statusMessage = document.getElementById('status-message');
 
 let chatkitInstance = null;
 let chatkitModulePromise = null;
+let cachedToken = null;
 
 /**
  * Update the live region that keeps users informed about connection state.
@@ -59,11 +59,34 @@ async function disposeChatKitInstance() {
 }
 
 /**
- * Mount ChatKit inside our UI using the embed instructions from the platform docs.
- * We accept a raw API key for local tinkering; production deployments should provide
- * an ephemeral session token from a secure backend instead.
+ * Fetch a ChatKit token from our backend. The backend reads the API key from
+ * environment variables so the browser never needs to collect it directly.
  */
-async function mountChatKit({ apiKey, model, instructions, sessionName }) {
+async function fetchChatKitToken() {
+  if (cachedToken) {
+    return cachedToken;
+  }
+
+  const response = await fetch('/api/chatkit-token', { method: 'POST' });
+  if (!response.ok) {
+    throw new Error('Token endpoint returned an error.');
+  }
+
+  const data = await response.json();
+  if (!data?.token) {
+    throw new Error('Token endpoint did not include a token.');
+  }
+
+  cachedToken = data.token;
+  return cachedToken;
+}
+
+/**
+ * Mount ChatKit inside our UI using the embed instructions from the platform docs.
+ * Tokens are retrieved from the backend, which can later be updated to mint
+ * short-lived credentials via the official token service.
+ */
+async function mountChatKit({ model, instructions, sessionName }) {
   const module = await loadChatKitModule();
   const initializer =
     module?.createChatKit ??
@@ -78,14 +101,15 @@ async function mountChatKit({ apiKey, model, instructions, sessionName }) {
   await disposeChatKitInstance();
   chatkitRoot.innerHTML = '';
 
+  const token = await fetchChatKitToken();
+
   const options = {
     element: chatkitRoot,
     model,
     instructions,
-    apiKey,
-    token: apiKey,
-    getToken: async () => apiKey,
-    tokenProvider: async () => apiKey
+    token,
+    getToken: fetchChatKitToken,
+    tokenProvider: fetchChatKitToken
   };
 
   if (sessionName) {
@@ -107,12 +131,6 @@ async function mountChatKit({ apiKey, model, instructions, sessionName }) {
 chatkitForm.addEventListener('submit', async event => {
   event.preventDefault();
 
-  const apiKey = apiKeyInput.value.trim();
-  if (!apiKey) {
-    setStatus('Please paste an OpenAI API key to launch ChatKit.', 'error');
-    return;
-  }
-
   const model = (modelInput.value || 'gpt-4o-mini').trim();
   const instructions = (instructionsInput.value || '').trim() ||
     'You are a friendly stand-up comedian who tells short, family-friendly jokes with witty timing. Keep responses under 3 sentences.';
@@ -121,11 +139,12 @@ chatkitForm.addEventListener('submit', async event => {
   setStatus('Loading ChatKit…');
 
   try {
-    await mountChatKit({ apiKey, model, instructions, sessionName });
+    cachedToken = null;
+    await mountChatKit({ model, instructions, sessionName });
     setStatus('ChatKit is ready! Ask for a topic and start laughing.', 'success');
   } catch (error) {
     console.error('Failed to mount ChatKit:', error);
-    setStatus('We could not load ChatKit. Confirm your key, model access, and internet connection.', 'error');
+    setStatus('We could not load ChatKit. Confirm your deployment and model access.', 'error');
   }
 });
 
