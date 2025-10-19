@@ -1,149 +1,137 @@
-// Grab references to DOM elements we'll interact with
-const chatWindow = document.getElementById('chat');
-const chatForm = document.getElementById('chat-form');
-const userInput = document.getElementById('user-input');
-const modeLabel = document.getElementById('mode-label');
-const modeToggleButton = document.getElementById('mode-toggle');
-const agentSettings = document.getElementById('agent-settings');
-const agentIdInput = document.getElementById('agent-id');
-const sessionIdInput = document.getElementById('session-id');
-const workflowIdInput = document.getElementById('workflow-id');
+const chatkitRoot = document.getElementById('chatkit-root');
+const chatkitForm = document.getElementById('chatkit-form');
+const apiKeyInput = document.getElementById('api-key');
+const modelInput = document.getElementById('chat-model');
+const instructionsInput = document.getElementById('instructions');
+const sessionNameInput = document.getElementById('session-name');
+const statusMessage = document.getElementById('status-message');
 
-// Track which backend the user wants to use; default to the existing ChatKit flow.
-let activeMode = 'chatkit';
-if (agentSettings) {
-  agentSettings.hidden = true;
-}
+let chatkitInstance = null;
+let chatkitModulePromise = null;
 
-// Toggle between ChatKit (responses endpoint) and AgentKit (agent endpoint) modes.
-modeToggleButton.addEventListener('click', () => {
-  activeMode = activeMode === 'chatkit' ? 'agentkit' : 'chatkit';
-
-  const isAgentMode = activeMode === 'agentkit';
-  modeLabel.textContent = isAgentMode ? 'AgentKit Mode' : 'ChatKit Mode';
-  modeToggleButton.textContent = isAgentMode ? 'Switch to ChatKit' : 'Switch to AgentKit';
-  modeToggleButton.setAttribute('aria-pressed', String(isAgentMode));
-  if (agentSettings) {
-    agentSettings.hidden = !isAgentMode;
+/**
+ * Update the live region that keeps users informed about connection state.
+ * @param {string} message - Human-friendly status description.
+ * @param {'info' | 'success' | 'error'} [variant='info'] - Toggle semantic color states.
+ */
+function setStatus(message, variant = 'info') {
+  statusMessage.textContent = message;
+  statusMessage.classList.remove('success', 'error');
+  if (variant !== 'info') {
+    statusMessage.classList.add(variant);
   }
-});
-
-/**
- * Create and append a chat bubble to the window.
- * @param {string} text - Content to display in the bubble.
- * @param {'user' | 'bot'} sender - Who sent the message.
- * @returns {HTMLDivElement} The DOM node for further manipulation if needed.
- */
-function addMessage(text, sender) {
-  const message = document.createElement('div');
-  message.classList.add('message', sender);
-  message.textContent = text;
-  chatWindow.appendChild(message);
-  chatWindow.scrollTop = chatWindow.scrollHeight;
-  return message;
 }
 
 /**
- * Display a friendly indicator while the AI composes a reply.
- * @returns {HTMLDivElement} The typing indicator element.
+ * Lazily import the ChatKit embed helper from the CDN referenced in the official docs.
+ * The module is cached after first load so repeated mounts stay snappy.
  */
-function showTypingIndicator(text) {
-  const indicator = addMessage(text, 'bot');
-  indicator.classList.add('typing');
-  return indicator;
-}
-
-/**
- * Request a fresh joke from the backend for the provided user message.
- * @param {string} message
- * @param {'chatkit' | 'agentkit'} mode
- */
-async function fetchJoke(message, mode) {
-  try {
-    const endpoint = mode === 'agentkit' ? '/api/agentJoke' : '/api/joke';
-    const payload =
-      mode === 'agentkit'
-        ? { message }
-        : { topic: message };
-
-    if (mode === 'agentkit') {
-      // Include the Agent Builder identifiers so the backend can route the
-      // request to the hosted agent and optionally reuse session memory.
-      payload.agentId = agentIdInput ? agentIdInput.value.trim() : '';
-      const session = sessionIdInput ? sessionIdInput.value.trim() : '';
-      if (session) {
-        payload.sessionId = session;
-      }
-      // Workflow IDs show up in the Agent SDK snippet the builder exports and
-      // help correlate requests with traces when observability is enabled.
-      const workflow = workflowIdInput ? workflowIdInput.value.trim() : '';
-      if (workflow) {
-        payload.workflowId = workflow;
-      }
-    }
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
+async function loadChatKitModule() {
+  if (!chatkitModulePromise) {
+    chatkitModulePromise = import('https://cdn.jsdelivr.net/npm/@openai/chatkit@latest/+esm').catch(error => {
+      chatkitModulePromise = null;
+      throw error;
     });
-
-    if (!response.ok) {
-      throw new Error(`Server responded with status ${response.status}`);
-    }
-
-    const data = await response.json();
-    if (!data || typeof data.joke !== 'string') {
-      throw new Error('Invalid response shape from joke API');
-    }
-
-    return data.joke.trim();
-  } catch (error) {
-    console.error('Failed to fetch joke:', error);
-    return "Sorry, I couldn't think of a joke right now. Please try again in a moment.";
   }
+  return chatkitModulePromise;
 }
 
-// Listen to form submission to handle user message and bot response
-chatForm.addEventListener('submit', async event => {
+/**
+ * Tear down a previous ChatKit instance if one exists. Different versions expose either
+ * `destroy` or `unmount`, so we defensively attempt both.
+ */
+async function disposeChatKitInstance() {
+  if (!chatkitInstance) {
+    return;
+  }
+
+  try {
+    if (typeof chatkitInstance.destroy === 'function') {
+      await chatkitInstance.destroy();
+    } else if (typeof chatkitInstance.unmount === 'function') {
+      await chatkitInstance.unmount();
+    }
+  } catch (error) {
+    console.warn('Failed to dispose ChatKit instance:', error);
+  }
+
+  chatkitInstance = null;
+}
+
+/**
+ * Mount ChatKit inside our UI using the embed instructions from the platform docs.
+ * We accept a raw API key for local tinkering; production deployments should provide
+ * an ephemeral session token from a secure backend instead.
+ */
+async function mountChatKit({ apiKey, model, instructions, sessionName }) {
+  const module = await loadChatKitModule();
+  const initializer =
+    module?.createChatKit ??
+    module?.createChat ??
+    module?.ChatKit ??
+    module?.default;
+
+  if (!initializer) {
+    throw new Error('Unable to locate the ChatKit embed initializer. Check the documentation for updates.');
+  }
+
+  await disposeChatKitInstance();
+  chatkitRoot.innerHTML = '';
+
+  const options = {
+    element: chatkitRoot,
+    model,
+    instructions,
+    apiKey,
+    token: apiKey,
+    getToken: async () => apiKey,
+    tokenProvider: async () => apiKey
+  };
+
+  if (sessionName) {
+    options.sessionName = sessionName;
+  }
+
+  const instance = typeof initializer === 'function'
+    ? await initializer(options)
+    : await initializer.mount?.(options);
+
+  if (!instance) {
+    throw new Error('ChatKit did not return a running instance.');
+  }
+
+  chatkitInstance = instance;
+  return instance;
+}
+
+chatkitForm.addEventListener('submit', async event => {
   event.preventDefault();
 
-  const message = userInput.value.trim();
-  if (!message) {
+  const apiKey = apiKeyInput.value.trim();
+  if (!apiKey) {
+    setStatus('Please paste an OpenAI API key to launch ChatKit.', 'error');
     return;
   }
 
-  if (activeMode === 'agentkit' && !(agentIdInput && agentIdInput.value.trim())) {
-    addMessage(
-      'Please enter your Agent ID (from the OpenAI Agent Builder) to use Agent mode.',
-      'bot'
-    );
-    return;
+  const model = (modelInput.value || 'gpt-4o-mini').trim();
+  const instructions = (instructionsInput.value || '').trim() ||
+    'You are a friendly stand-up comedian who tells short, family-friendly jokes with witty timing. Keep responses under 3 sentences.';
+  const sessionName = (sessionNameInput.value || '').trim();
+
+  setStatus('Loading ChatKit…');
+
+  try {
+    await mountChatKit({ apiKey, model, instructions, sessionName });
+    setStatus('ChatKit is ready! Ask for a topic and start laughing.', 'success');
+  } catch (error) {
+    console.error('Failed to mount ChatKit:', error);
+    setStatus('We could not load ChatKit. Confirm your key, model access, and internet connection.', 'error');
   }
-
-  // Display the user's message
-  addMessage(message, 'user');
-
-  // Show a typing indicator while we wait for the AI to respond
-  const indicatorText = activeMode === 'agentkit' ? '🎭 ComedianBot is thinking…' : 'AI is thinking…';
-  const typingIndicator = showTypingIndicator(indicatorText);
-
-  // Clear the input for the next message
-  userInput.value = '';
-  userInput.focus();
-
-  // Retrieve the AI-generated joke from the backend. Agent Builder keeps
-  // conversational context server-side for a session, so reusing the same
-  // session ID lets ComedianBot reference previous topics.
-  const joke = await fetchJoke(message, activeMode);
-
-  // Replace the typing indicator with the actual joke text
-  typingIndicator.textContent = joke;
-  typingIndicator.classList.remove('typing');
 });
 
-// Future extension idea: enable new tools for the hosted agent (voice synth,
-// Supabase favorites, etc.) directly in the Agent Builder UI and they'll be
-// available without changing this frontend fetch logic.
+// Provide guidance for keyboard users landing directly in the embed area.
+chatkitRoot.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && chatkitInstance?.focusInput) {
+    chatkitInstance.focusInput();
+  }
+});
