@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Joke Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="chat-container">
+    <header class="chat-header">
+      <h1>AI Joke Chat</h1>
+      <p class="subtitle">Embed OpenAI ChatKit and riff on topics right in your browser.</p>
+    </header>
+
+    <section class="setup-panel" aria-labelledby="chatkit-setup-heading">
+      <div class="panel-header">
+        <h2 id="chatkit-setup-heading">Connect ChatKit</h2>
+        <p class="panel-description">
+          Supply your OpenAI credentials to spin up an embedded ChatKit session. The key stays in this tab
+          and is never sent to our demo server.
+        </p>
+      </div>
+
+      <form id="chatkit-form" class="setup-form" autocomplete="off">
+        <div class="field-group">
+          <label for="api-key">OpenAI API Key</label>
+          <input
+            type="password"
+            id="api-key"
+            name="apiKey"
+            placeholder="sk-..."
+            required
+          />
+          <p class="field-hint">Use a key with access to ChatKit-compatible models.</p>
+        </div>
+
+        <div class="field-group split">
+          <div>
+            <label for="chat-model">Model</label>
+            <input
+              type="text"
+              id="chat-model"
+              name="model"
+              value="gpt-4o-mini"
+              required
+            />
+          </div>
+          <div>
+            <label for="session-name">Session name <span class="hint">(optional)</span></label>
+            <input
+              type="text"
+              id="session-name"
+              name="sessionName"
+              placeholder="joke-lab"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="instructions">System instructions</label>
+          <textarea
+            id="instructions"
+            name="instructions"
+            rows="3"
+            placeholder="You are a friendly stand-up comedian who tells short, family-friendly jokes with witty timing. Keep responses under 3 sentences."
+          ></textarea>
+        </div>
+
+        <button type="submit" class="primary">Launch ChatKit</button>
+      </form>
+
+      <p id="status-message" class="status-message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="chatkit-shell" aria-live="polite">
+      <div id="chatkit-root" class="chatkit-root" role="region" aria-label="Embedded ChatKit conversation">
+        <div class="placeholder">
+          <p>Fill out the form above to mount ChatKit and start trading jokes.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js" type="module"></script>
+</body>
+</html>
