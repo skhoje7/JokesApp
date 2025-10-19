@@ -12,7 +12,7 @@ const inputField = document.getElementById("userInput");
 const sendButton = document.getElementById("sendBtn");
 
 // Replace this identifier with the workflow or agent you created in the OpenAI dashboard.
-const WORKFLOW_ID = "workflow_ABC123xyz";
+const WORKFLOW_ID = "wf_68f3a6c241748190803e89af749af63b0023d1e7eb2e2ddc";
 
 let chatClientPromise = null;
 
