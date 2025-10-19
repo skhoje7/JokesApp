@@ -1,76 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Joke Chat</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="chat-container">
-    <header class="chat-header">
-      <h1>AI Joke Chat</h1>
-      <p class="subtitle">Embed OpenAI ChatKit and riff on topics right in your browser.</p>
-    </header>
-
-    <section class="setup-panel" aria-labelledby="chatkit-setup-heading">
-      <div class="panel-header">
-        <h2 id="chatkit-setup-heading">Connect ChatKit</h2>
-        <p class="panel-description">
-          Launch an embedded ChatKit session using the API key stored in your Vercel environment. No secrets
-          are collected in the browser.
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Joke Chat</title>
+    <link rel="stylesheet" href="style.css" />
+    <!-- Map the ESM build so the module import resolves in modern browsers. -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@openai/chatkit": "https://cdn.jsdelivr.net/npm/@openai/chatkit/dist/chatkit.esm.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <h1>AI Joke Chat</h1>
+        <p class="tagline">
+          Share a topic and watch OpenAI ChatKit stream a custom, family-friendly joke.
         </p>
-      </div>
+      </header>
 
-      <form id="chatkit-form" class="setup-form" autocomplete="off">
-        <div class="field-group split">
-          <div>
-            <label for="chat-model">Model</label>
-            <input
-              type="text"
-              id="chat-model"
-              name="model"
-              value="gpt-4o-mini"
-              required
-            />
+      <main class="chat-card" aria-live="polite">
+        <section id="chat" class="chat-window" aria-label="Chat transcript">
+          <div class="message bot">
+            Ready when you are! Ask for a topic like <em>cars</em> or <em>animals</em> and I will improvise.
           </div>
-          <div>
-            <label for="session-name">Session name <span class="hint">(optional)</span></label>
-            <input
-              type="text"
-              id="session-name"
-              name="sessionName"
-              placeholder="joke-lab"
-              autocomplete="off"
-            />
-          </div>
-        </div>
+        </section>
 
-        <div class="field-group">
-          <label for="instructions">System instructions</label>
-          <textarea
-            id="instructions"
-            name="instructions"
-            rows="3"
-            placeholder="You are a friendly stand-up comedian who tells short, family-friendly jokes with witty timing. Keep responses under 3 sentences."
-          ></textarea>
-        </div>
+        <form id="chat-form" class="composer" autocomplete="off" aria-label="Send a topic for a joke">
+          <label class="visually-hidden" for="userInput">Joke topic</label>
+          <input
+            id="userInput"
+            name="topic"
+            type="text"
+            placeholder="Ask for a joke about cars, coffee, coding…"
+            required
+          />
+          <button id="sendBtn" type="submit">Send</button>
+        </form>
+      </main>
 
-        <button type="submit" class="primary">Launch ChatKit</button>
-      </form>
+      <footer class="footnote">
+        <p>
+          Tokens come from a secure Vercel function that creates temporary ChatKit sessions. Update
+          the <code>workflow_ABC123xyz</code> constant in <code>script.js</code> to point at your own workflow or
+          agent.
+        </p>
+      </footer>
+    </div>
 
-      <p id="status-message" class="status-message" role="status" aria-live="polite"></p>
-    </section>
-
-    <section class="chatkit-shell" aria-live="polite">
-      <div id="chatkit-root" class="chatkit-root" role="region" aria-label="Embedded ChatKit conversation">
-        <div class="placeholder">
-          <p>Fill out the form above to mount ChatKit and start trading jokes.</p>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <script src="script.js" type="module"></script>
-</body>
+    <!-- Load the global UMD build for environments that prefer window.ChatKit. -->
+    <script src="https://cdn.jsdelivr.net/npm/@openai/chatkit/dist/chatkit.umd.js"></script>
+    <script type="module" src="./script.js"></script>
+  </body>
 </html>
